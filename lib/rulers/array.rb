@@ -3,7 +3,7 @@ class Array
     empty? || all?(&:empty?)
   end
 
-  def present?(val) 
-    include?(val)
+  def present? 
+    puts "this is a test"
   end
 end
