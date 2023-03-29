@@ -16,5 +16,6 @@ class RulersAppTest < Minitest::Test
     assert last_response.ok?
     body = last_response.body
     assert body["Hello"]
+    assert body["Rulers"]
   end
 end
