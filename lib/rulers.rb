@@ -5,6 +5,7 @@ require "rulers/array"
 require "rulers/routing"
 require "rulers/util"
 require "rulers/dependencies"
+require "rulers/controller"
 
 module Rulers
   class Application
@@ -32,16 +33,6 @@ module Rulers
         [200, {'Content-Type' => 'text/html'},
         [text]]
       end 
-    end
-  end
-
-  class Controller 
-    def initialize(env)
-      @env = env
-    end
-
-    def env
-      @env 
     end
   end
 end
