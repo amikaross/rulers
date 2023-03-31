@@ -20,7 +20,12 @@ module Rulers
       filename = File.join("app", "views", controller_name, "#{view_name}.html.erb")
       template = File.read(filename)
       eruby = Erubis::Eruby.new(template)
-      eruby.result(locals.merge(:env => env))
+
+      instance_variables.each do |var|
+        locals[var] = instance_variable_get(var)
+      end
+
+      result = eruby.result(locals)
     end
   end
 end
