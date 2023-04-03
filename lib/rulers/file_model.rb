@@ -51,6 +51,18 @@ module Rulers
         @hash[name.to_s] = value
       end
 
+      def save
+        File.open(@filename, "w") do |f|
+          f.write <<-TEMPLATE
+          {
+            "submitter": "#{@hash["submitter"]}",
+            "quote": "#{@hash["quote"]}",
+            "attribution": "#{@hash["attribution"]}
+          }
+          TEMPLATE
+        end
+      end
+
       def self.find(id)
         begin
           FileModel.new("db/quotes/#{id}.json")
