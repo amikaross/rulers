@@ -3,6 +3,11 @@ require "multi_json"
 module Rulers
   module Model 
     class FileModel 
+      def self.all 
+        files = Dir["db/quotes/*.json"]
+        files.map { |f| FileModel.new(f) }
+      end
+
       def initialize(filename)
         @filename = filename 
 
