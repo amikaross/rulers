@@ -17,23 +17,19 @@ module Rulers
       end
 
       if env['PATH_INFO'] == '/'
-        return [200, 
-          {'Content-Type' => 'text/html'}, 
-          [File.read("public/index.html")]]
-      end 
+        return [200,
+          {'Content-Type' => 'text/html'}, [File.read("public/index.html")]]
+      end
 
       klass, act = get_controller_and_action(env)
       controller = klass.new(env)
-
-      begin 
-        text = controller.send(act)
-      rescue RuntimeError
-        [500, {'Content-Type' => 'text/html'},
-        ["Oh no! There's been a runtime error!"]]
-      else
-        [200, {'Content-Type' => 'text/html'},
-        [text]]
-      end 
+      text = controller.send(act)
+      r = controller.get_response
+      if r.nil?
+        controller.render_response(act.to_sym)
+        r = controller.get_response
+      end
+      [r.status, r.headers, [r.body].flatten]
     end
   end
 end
