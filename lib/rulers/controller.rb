@@ -1,6 +1,6 @@
-require 'erubis'
 require "rulers/file_model"
 require "rack/request"
+require "rulers/view"
 
 module Rulers
   class Controller 
@@ -45,13 +45,15 @@ module Rulers
     def build_eruby(view_name, locals = {})
       filename = File.join("app", "views", controller_name, "#{view_name}.html.erb")
       template = File.read(filename)
-      eruby = Erubis::Eruby.new(template)
+      view = View.new
+      view.set_vars(instance_hash)
+      view.evaluate(template)
+    end
 
-      instance_variables.each do |var|
-        locals[var] = instance_variable_get(var)
+    def instance_hash
+      instance_variables.each_with_object({}) do |var, h|
+        h[var] = instance_variable_get(var)
       end
-
-      result = eruby.result(locals)
     end
   end
 end
