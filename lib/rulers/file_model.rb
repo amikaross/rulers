@@ -8,6 +8,31 @@ module Rulers
         files.map { |f| FileModel.new(f) }
       end
 
+      def self.method_missing(method, *args)
+        if method.to_s =~ /find_all_by_(\w+)/
+          attribute = method.to_s.split("_")[-1]
+          return find_all_by_attribute(attribute, args[0])
+        else
+          super
+        end
+      end
+
+      def self.respond_to_missing(method, *)
+        method =~ /find_all_by_(\w+)/ || super
+      end
+
+      def self.find_all_by_attribute(attribute, value)
+        id = 1
+        results = []
+        m = FileModel.find(id)
+        while !m.nil? do 
+          results.push(m) if m[attribute] == value
+          id += 1
+          m = FileModel.find(id)
+        end
+        results
+      end
+
       def self.create(attrs)
         hash = {}
         hash["submitter"] = attrs["submitter"] || ""
@@ -66,7 +91,6 @@ module Rulers
       def self.find(id)
         id = id.to_i
         @dm_style_cache ||= {}
-    
         begin
           if @dm_style_cache[id]
             return @dm_style_cache[id]
