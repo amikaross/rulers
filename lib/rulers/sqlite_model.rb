@@ -10,6 +10,23 @@ module Rulers
         @hash = data
       end
 
+      def save!
+        fields = @hash.map do |k, v|
+          "#{k}=#{self.class.to_sql(v)}"
+        end.join(",")
+        DB.execute <<~SQL
+          UPDATE #{self.class.table}
+          SET #{fields}
+          WHERE id = #{@hash["id"]}
+        SQL
+
+        true
+      end
+
+      def save
+        self.save! rescue false 
+      end
+
       def self.to_sql(val)
         case val
         when NilClass
