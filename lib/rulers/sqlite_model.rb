@@ -79,6 +79,15 @@ module Rulers
         @schema
       end
 
+      def self.all
+        rows = DB.execute <<~SQL
+          select * from #{table};
+        SQL
+        rows.map do |row|
+          self.new(Hash[schema.keys.zip(row)])
+        end
+      end
+
       def self.find(id)
         row = DB.execute <<~SQL
           select #{schema.keys.join(",")} from #{table}
