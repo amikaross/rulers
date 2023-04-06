@@ -1,11 +1,40 @@
 require "sqlite3"
 require "rulers/util"
+require "multi_json"
 
 DB = SQLite3::Database.new "test.db"
 
 module Rulers
   module Model 
     class SQLite
+      def self.json_field(*fields)
+        @json_fields ||= []
+        @json_fields.concat(fields.map(&:to_s))
+      end
+
+      def self.to_sql(key, val)
+        if @json_fields.include?(key.to_s)
+          return "'#{MultiJson.dump(val)}'"
+        end
+        case val
+        when NilClass
+          'null'
+        when Numeric
+          val.to_s
+        when String
+          "'#{val}'"
+        else
+          raise "Can't change #{val.class} to SQL!"
+        end
+      end
+
+      def self.from_sql(key, val)
+        if @json_fields.include?(key.to_s)
+          return MultiJson.load(val)
+        end
+        val
+      end
+
       def method_missing(name, *args)
         if @hash[name.to_s]
           self.class.class_eval do 
@@ -35,7 +64,7 @@ module Rulers
 
       def save!
         fields = @hash.map do |k, v|
-          "#{k}=#{self.class.to_sql(v)}"
+          "#{k}=#{self.class.to_sql(k, v)}"
         end.join(",")
         DB.execute <<~SQL
           UPDATE #{self.class.table}
@@ -50,24 +79,11 @@ module Rulers
         self.save! rescue false 
       end
 
-      def self.to_sql(val)
-        case val
-        when NilClass
-          'null'
-        when Numeric
-          val.to_s
-        when String
-          "'#{val}'"
-        else
-          raise "Can't change #{val.class} to SQL!"
-        end
-      end
-
       def self.create(values)
         values.delete "id"
         keys = schema.keys - ["id"]
         vals = keys.map do |key|
-          values[key] ? to_sql(values[key]) : "null"
+          values[key] ? to_sql(key, values[key]) : "null"
         end
 
         DB.execute <<~SQL
@@ -118,6 +134,9 @@ module Rulers
         SQL
 
         data = Hash[schema.keys.zip(row[0])]
+        data.each do |k, v|
+          data[k] = from_sql(k, v)
+        end
         self.new(data)
       end
 
