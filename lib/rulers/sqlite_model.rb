@@ -6,6 +6,29 @@ DB = SQLite3::Database.new "test.db"
 module Rulers
   module Model 
     class SQLite
+      def method_missing(name, *args)
+        if @hash[name.to_s]
+          self.class.class_eval do 
+            define_method(name) do 
+              self[name]
+            end
+          end
+          return self.send(name)
+        end
+
+        if name.to_s[-1..-1] == "="
+          col_name = name.to_s[0..-2]
+          self.class.class_eval do 
+            define_method(name) do |value|
+              self[col_name] = value
+            end
+          end
+          return self.send(name, args[0])
+        end
+
+        super
+      end
+
       def initialize(data = nil)
         @hash = data
       end
